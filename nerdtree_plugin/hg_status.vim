@@ -54,60 +54,73 @@ endif
 
 
 function! NERDTreeHgStatusRefreshListener(event)
+    "call g:NERDTreeHgStatusRefresh()
     if !exists('b:NOT_A_HG_REPOSITORY')
         call g:NERDTreeHgStatusRefresh()
+    else 
+"        Decho "Not a hg repo"
     endif
-    let l:path = a:event.subject
-    let l:flag = g:NERDTreeGetHgStatusPrefix(l:path)
-    call l:path.flagSet.clearFlags('hg')
-    if l:flag !=# ''
-        call l:path.flagSet.addFlag('hg', l:flag)
-    endif
+
+    "let l:path = a:event.subject
+    "let l:flag = g:NERDTreeGetHgStatusPrefix(l:path)
+    "call l:path.flagSet.clearFlags('hg')
+    "if l:flag !=# ''
+        "call l:path.flagSet.addFlag('hg', l:flag)
+    "endif
 endfunction
 
 " FUNCTION: g:NERDTreeHgStatusRefresh() {{{2
 " refresh cached hg status
 function! g:NERDTreeHgStatusRefresh()
+"    call Dfunc("NERDTreeHgStatusRefresh()")
+
     let b:NERDTreeCachedHgFileStatus = {}
     let b:NERDTreeCachedHgDirtyDir   = {}
     let b:NOT_A_HG_REPOSITORY        = 1
 
     let l:root = b:NERDTreeRoot.path.str()
     let l:hgcmd = 'hg --config color.mode=false status'
-    if !exists('g:NERDTreeHgStatusIgnoreSubrepositories')
-          \ || 
-        let l:hgcmd = l:hgcmd . ' -S'
-    endif
+
+    "if !exists('g:NERDTreeHgStatusIgnoreSubrepositories')
+          "\ || 
+        "let l:hgcmd = l:hgcmd . ' -S'
+    "endif
     let l:hgcmd = l:hgcmd . ' .'
     let l:statusesStr = system('cd ' . l:root . ' && ' . l:hgcmd)
+"    "Decho("statusesStr=" . statusesStr)
     let l:statusesSplit = split(l:statusesStr, '\n')
     if l:statusesSplit != [] && l:statusesSplit[0] =~# 'abort:.*'
         let l:statusesSplit = []
+"        call Dret("NERDTreeHgStatusRefresh")
         return
     endif
     let b:NOT_A_HG_REPOSITORY = 0
 
     for l:statusLine in l:statusesSplit
-        " cache hg status of files
+"        Decho l:statusLine 
+        "" cache hg status of files
 
-        " remove first two chars
+        "" remove first two chars
         let l:pathStr = substitute(l:statusLine, '..', '', '')
+"        Decho l:pathStr
         let l:pathSplit = split(l:pathStr, ' -> ')
-        if len(l:pathSplit) == 2
-            call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
-            let l:pathStr = l:pathSplit[1]
-        else
-            let l:pathStr = l:pathSplit[0]
-        endif
-        let l:pathStr = s:NERDTreeTrimDoubleQuotes(l:pathStr)
-        if l:pathStr =~# '\.\./.*'
-            continue
-        endif
-        let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
-        let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
+"        Decho l:pathSplit
+        "if len(l:pathSplit) == 2
+            "call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
+            "let l:pathStr = l:pathSplit[1]
+        "else
+            "let l:pathStr = l:pathSplit[0]
+        "endif
+        "let l:pathStr = s:NERDTreeTrimDoubleQuotes(l:pathStr)
+        "if l:pathStr =~# '\.\./.*'
+            "continue
+        "endif
+        "let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
+        "let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
-        call s:NERDTreeCacheDirtyDir(l:pathStr)
+        "call s:NERDTreeCacheDirtyDir(l:pathStr)
     endfor
+"    call Dret("NERDTreeHgStatusRefresh")
 endfunction
 
 function! s:NERDTreeCacheDirtyDir(pathStr)
