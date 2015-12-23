@@ -1,6 +1,6 @@
 " ============================================================================
-" File:        git_status.vim
-" Description: plugin for NERD Tree that provides git status support
+" File:        hg_status.vim
+" Description: plugin for NERD Tree that provides hg status support
 " Maintainer:  Xuyuan Pang <xuyuanp at gmail dot com>
 " Last Change: 4 Apr 2014
 " License:     This program is free software. It comes without any warranty,
@@ -9,25 +9,25 @@
 "              Want To Public License, Version 2, as published by Sam Hocevar.
 "              See http://sam.zoy.org/wtfpl/COPYING for more details.
 " ============================================================================
-if exists('g:loaded_nerdtree_git_status')
+if exists('g:loaded_nerdtree_hg_status')
     finish
 endif
-let g:loaded_nerdtree_git_status = 1
+let g:loaded_nerdtree_hg_status = 1
 
-if !exists('g:NERDTreeShowGitStatus')
-    let g:NERDTreeShowGitStatus = 1
+if !exists('g:NERDTreeShowHgStatus')
+    let g:NERDTreeShowHgStatus = 1
 endif
 
-if g:NERDTreeShowGitStatus == 0
+if g:NERDTreeShowHgStatus == 0
     finish
 endif
 
-if !exists('g:NERDTreeMapNextHunk')
-    let g:NERDTreeMapNextHunk = ']c'
+if !exists('g:NERDTreeMapNextHgHunk')
+    let g:NERDTreeMapNextHgHunk = ']c'
 endif
 
-if !exists('g:NERDTreeMapPrevHunk')
-    let g:NERDTreeMapPrevHunk = '[c'
+if !exists('g:NERDTreeMapPrevHgHunk')
+    let g:NERDTreeMapPrevHgHunk = '[c'
 endif
 
 if !exists('g:NERDTreeUpdateOnWrite')
@@ -53,44 +53,45 @@ if !exists('s:NERDTreeIndicatorMap')
 endif
 
 
-function! NERDTreeGitStatusRefreshListener(event)
-    if !exists('b:NOT_A_GIT_REPOSITORY')
-        call g:NERDTreeGitStatusRefresh()
+function! NERDTreeHgStatusRefreshListener(event)
+    if !exists('b:NOT_A_HG_REPOSITORY')
+        call g:NERDTreeHgStatusRefresh()
     endif
     let l:path = a:event.subject
-    let l:flag = g:NERDTreeGetGitStatusPrefix(l:path)
-    call l:path.flagSet.clearFlags('git')
+    let l:flag = g:NERDTreeGetHgStatusPrefix(l:path)
+    call l:path.flagSet.clearFlags('hg')
     if l:flag !=# ''
-        call l:path.flagSet.addFlag('git', l:flag)
+        call l:path.flagSet.addFlag('hg', l:flag)
     endif
 endfunction
 
-" FUNCTION: g:NERDTreeGitStatusRefresh() {{{2
-" refresh cached git status
-function! g:NERDTreeGitStatusRefresh()
-    let b:NERDTreeCachedGitFileStatus = {}
-    let b:NERDTreeCachedGitDirtyDir   = {}
-    let b:NOT_A_GIT_REPOSITORY        = 1
+" FUNCTION: g:NERDTreeHgStatusRefresh() {{{2
+" refresh cached hg status
+function! g:NERDTreeHgStatusRefresh()
+    let b:NERDTreeCachedHgFileStatus = {}
+    let b:NERDTreeCachedHgDirtyDir   = {}
+    let b:NOT_A_HG_REPOSITORY        = 1
 
     let l:root = b:NERDTreeRoot.path.str()
-    let l:gitcmd = 'git -c color.status=false status -s'
-    if exists('g:NERDTreeGitStatusIgnoreSubmodules')
-        let l:gitcmd = l:gitcmd . ' --ignore-submodules'
-        if g:NERDTreeGitStatusIgnoreSubmodules ==# 'all' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'dirty' || g:NERDTreeGitStatusIgnoreSubmodules ==# 'untracked'
-            let l:gitcmd = l:gitcmd . '=' . g:NERDTreeGitStatusIgnoreSubmodules
-        endif
+    let l:hgcmd = 'hg --config color.mode=false status'
+    if !exists('g:NERDTreeHgStatusIgnoreSubrepositories')
+          \ || 
+        let l:hgcmd = l:hgcmd . ' -S'
     endif
-    let l:statusesStr = system('cd ' . l:root . ' && ' . l:gitcmd)
+    let l:hgcmd = l:hgcmd . ' .'
+    let l:statusesStr = system('cd ' . l:root . ' && ' . l:hgcmd)
     let l:statusesSplit = split(l:statusesStr, '\n')
-    if l:statusesSplit != [] && l:statusesSplit[0] =~# 'fatal:.*'
+    if l:statusesSplit != [] && l:statusesSplit[0] =~# 'abort:.*'
         let l:statusesSplit = []
         return
     endif
-    let b:NOT_A_GIT_REPOSITORY = 0
+    let b:NOT_A_HG_REPOSITORY = 0
 
     for l:statusLine in l:statusesSplit
-        " cache git status of files
-        let l:pathStr = substitute(l:statusLine, '...', '', '')
+        " cache hg status of files
+
+        " remove first two chars
+        let l:pathStr = substitute(l:statusLine, '..', '', '')
         let l:pathSplit = split(l:pathStr, ' -> ')
         if len(l:pathSplit) == 2
             call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
@@ -102,8 +103,8 @@ function! g:NERDTreeGitStatusRefresh()
         if l:pathStr =~# '\.\./.*'
             continue
         endif
-        let l:statusKey = s:NERDTreeGetFileGitStatusKey(l:statusLine[0], l:statusLine[1])
-        let b:NERDTreeCachedGitFileStatus[fnameescape(l:pathStr)] = l:statusKey
+        let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
+        let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
         call s:NERDTreeCacheDirtyDir(l:pathStr)
     endfor
@@ -116,8 +117,8 @@ function! s:NERDTreeCacheDirtyDir(pathStr)
         return
     endif
     let l:dirtyPath = substitute(l:dirtyPath, '/[^/]*$', '/', '')
-    while l:dirtyPath =~# '.\+/.*' && has_key(b:NERDTreeCachedGitDirtyDir, fnameescape(l:dirtyPath)) == 0
-        let b:NERDTreeCachedGitDirtyDir[fnameescape(l:dirtyPath)] = 'Dirty'
+    while l:dirtyPath =~# '.\+/.*' && has_key(b:NERDTreeCachedHgDirtyDir, fnameescape(l:dirtyPath)) == 0
+        let b:NERDTreeCachedHgDirtyDir[fnameescape(l:dirtyPath)] = 'Dirty'
         let l:dirtyPath = substitute(l:dirtyPath, '/[^/]*/$', '/', '')
     endwhile
 endfunction
@@ -128,15 +129,15 @@ function! s:NERDTreeTrimDoubleQuotes(pathStr)
     return l:toReturn
 endfunction
 
-" FUNCTION: g:NERDTreeGetGitStatusPrefix(path) {{{2
+" FUNCTION: g:NERDTreeGetHgStatusPrefix(path) {{{2
 " return the indicator of the path
 " Args: path
-let s:GitStatusCacheTimeExpiry = 2
-let s:GitStatusCacheTime = 0
-function! g:NERDTreeGetGitStatusPrefix(path)
-    if localtime() - s:GitStatusCacheTime > s:GitStatusCacheTimeExpiry
-        let s:GitStatusCacheTime = localtime()
-        call g:NERDTreeGitStatusRefresh()
+let s:HgStatusCacheTimeExpiry = 2
+let s:HgStatusCacheTime = 0
+function! g:NERDTreeGetHgStatusPrefix(path)
+    if localtime() - s:HgStatusCacheTime > s:HgStatusCacheTimeExpiry
+        let s:HgStatusCacheTime = localtime()
+        call g:NERDTreeHgStatusRefresh()
     endif
     let l:pathStr = a:path.str()
     let l:cwd = b:NERDTreeRoot.path.str() . a:path.Slash()
@@ -147,19 +148,19 @@ function! g:NERDTreeGetGitStatusPrefix(path)
     let l:pathStr = substitute(l:pathStr, fnameescape(l:cwd), '', '')
     let l:statusKey = ''
     if a:path.isDirectory
-        let l:statusKey = get(b:NERDTreeCachedGitDirtyDir, fnameescape(l:pathStr . '/'), '')
+        let l:statusKey = get(b:NERDTreeCachedHgDirtyDir, fnameescape(l:pathStr . '/'), '')
     else
-        let l:statusKey = get(b:NERDTreeCachedGitFileStatus, fnameescape(l:pathStr), '')
+        let l:statusKey = get(b:NERDTreeCachedHgFileStatus, fnameescape(l:pathStr), '')
     endif
     return s:NERDTreeGetIndicator(l:statusKey)
 endfunction
 
-" FUNCTION: s:NERDTreeGetCWDGitStatus() {{{2
+" FUNCTION: s:NERDTreeGetCWDHgStatus() {{{2
 " return the indicator of cwd
-function! g:NERDTreeGetCWDGitStatus()
+function! g:NERDTreeGetCWDHgStatus()
     if b:NOT_A_GIT_REPOSITORY
         return ''
-    elseif b:NERDTreeCachedGitDirtyDir == {} && b:NERDTreeCachedGitFileStatus == {}
+    elseif b:NERDTreeCachedHgDirtyDir == {} && b:NERDTreeCachedHgFileStatus == {}
         return s:NERDTreeGetIndicator('Clean')
     endif
     return s:NERDTreeGetIndicator('Dirty')
@@ -179,7 +180,7 @@ function! s:NERDTreeGetIndicator(statusKey)
     return ''
 endfunction
 
-function! s:NERDTreeGetFileGitStatusKey(us, them)
+function! s:NERDTreeGetFileHgStatusKey(us, them)
     if a:us ==# '?' && a:them ==# '?'
         return 'Untracked'
     elseif a:us ==# ' ' && a:them ==# 'M'
@@ -221,25 +222,25 @@ function s:SID()
     return s:sid
 endfun
 
-" FUNCTION: s:NERDTreeGitStatusKeyMapping {{{2
-function! s:NERDTreeGitStatusKeyMapping()
+" FUNCTION: s:NERDTreeHgStatusKeyMapping {{{2
+function! s:NERDTreeHgStatusKeyMapping()
     let l:s = '<SNR>' . s:SID() . '_'
 
     call NERDTreeAddKeyMap({
-        \ 'key': g:NERDTreeMapNextHunk,
+        \ 'key': g:NERDTreeMapNextHgHunk,
         \ 'scope': 'Node',
         \ 'callback': l:s.'jumpToNextHunk',
-        \ 'quickhelpText': 'Jump to next git hunk' })
+        \ 'quickhelpText': 'Jump to next hg hunk' })
 
     call NERDTreeAddKeyMap({
-        \ 'key': g:NERDTreeMapPrevHunk,
+        \ 'key': g:NERDTreeMapPrevHgHunk,
         \ 'scope': 'Node',
         \ 'callback': l:s.'jumpToPrevHunk',
-        \ 'quickhelpText': 'Jump to prev git hunk' })
+        \ 'quickhelpText': 'Jump to prev hg hunk' })
 
 endfunction
 
-augroup nerdtreegitplugin
+augroup nerdtreehgplugin
     autocmd CursorHold * silent! call s:CursorHoldUpdate()
 augroup END
 " FUNCTION: s:CursorHoldUpdate() {{{2
@@ -259,7 +260,7 @@ function! s:CursorHoldUpdate()
     exec l:winnr . 'wincmd w'
 endfunction
 
-augroup nerdtreegitplugin
+augroup nerdtreehgplugin
     autocmd BufWritePost * call s:FileUpdate(expand('%:p'))
 augroup END
 
@@ -295,34 +296,34 @@ augroup AddHighlighting
 augroup END
 function! s:AddHighlighting()
     let l:synmap = {
-                \ 'NERDTreeGitStatusModified'    : s:NERDTreeGetIndicator('Modified'),
-                \ 'NERDTreeGitStatusStaged'      : s:NERDTreeGetIndicator('Staged'),
-                \ 'NERDTreeGitStatusUntracked'   : s:NERDTreeGetIndicator('Untracked'),
-                \ 'NERDTreeGitStatusRenamed'     : s:NERDTreeGetIndicator('Renamed'),
-                \ 'NERDTreeGitStatusDirDirty'    : s:NERDTreeGetIndicator('Dirty'),
-                \ 'NERDTreeGitStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
+                \ 'NERDTreeHgStatusModified'    : s:NERDTreeGetIndicator('Modified'),
+                \ 'NERDTreeHgStatusStaged'      : s:NERDTreeGetIndicator('Staged'),
+                \ 'NERDTreeHgStatusUntracked'   : s:NERDTreeGetIndicator('Untracked'),
+                \ 'NERDTreeHgStatusRenamed'     : s:NERDTreeGetIndicator('Renamed'),
+                \ 'NERDTreeHgStatusDirDirty'    : s:NERDTreeGetIndicator('Dirty'),
+                \ 'NERDTreeHgStatusDirClean'    : s:NERDTreeGetIndicator('Clean')
                 \ }
 
     for l:name in keys(l:synmap)
         exec 'syn match ' . l:name . ' #' . escape(l:synmap[l:name], '~') . '# containedin=NERDTreeFlags'
     endfor
 
-    hi def link NERDTreeGitStatusModified Special
-    hi def link NERDTreeGitStatusStaged Function
-    hi def link NERDTreeGitStatusRenamed Title
-    hi def link NERDTreeGitStatusUnmerged Label
-    hi def link NERDTreeGitStatusUntracked Comment
-    hi def link NERDTreeGitStatusDirDirty Tag
-    hi def link NERDTreeGitStatusDirClean DiffAdd
+    hi def link NERDTreeHgStatusModified Special
+    hi def link NERDTreeHgStatusStaged Function
+    hi def link NERDTreeHgStatusRenamed Title
+    hi def link NERDTreeHgStatusUnmerged Label
+    hi def link NERDTreeHgStatusUntracked Comment
+    hi def link NERDTreeHgStatusDirDirty Tag
+    hi def link NERDTreeHgStatusDirClean DiffAdd
 endfunction
 
 function! s:SetupListeners()
-    call g:NERDTreePathNotifier.AddListener('init', 'NERDTreeGitStatusRefreshListener')
-    call g:NERDTreePathNotifier.AddListener('refresh', 'NERDTreeGitStatusRefreshListener')
-    call g:NERDTreePathNotifier.AddListener('refreshFlags', 'NERDTreeGitStatusRefreshListener')
+    call g:NERDTreePathNotifier.AddListener('init', 'NERDTreeHgStatusRefreshListener')
+    call g:NERDTreePathNotifier.AddListener('refresh', 'NERDTreeHgStatusRefreshListener')
+    call g:NERDTreePathNotifier.AddListener('refreshFlags', 'NERDTreeHgStatusRefreshListener')
 endfunction
 
-if g:NERDTreeShowGitStatus && executable('git')
-    call s:NERDTreeGitStatusKeyMapping()
+if g:NERDTreeShowHgStatus && executable('hg')
+    call s:NERDTreeHgStatusKeyMapping()
     call s:SetupListeners()
 endif
