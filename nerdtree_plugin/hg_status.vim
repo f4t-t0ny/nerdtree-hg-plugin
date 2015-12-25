@@ -52,7 +52,7 @@ if !exists('s:NERDTreeIndicatorMap')
                 \ }
 endif
 
-
+" FUNCTION: g:NERDTreeHgStatusRefreshListener(event) {{{1
 function! NERDTreeHgStatusRefreshListener(event)
     "call g:NERDTreeHgStatusRefresh()
     if !exists('b:NOT_A_HG_REPOSITORY')
@@ -61,15 +61,15 @@ function! NERDTreeHgStatusRefreshListener(event)
 "        Decho "Not a hg repo"
     endif
 
-    "let l:path = a:event.subject
-    "let l:flag = g:NERDTreeGetHgStatusPrefix(l:path)
-    "call l:path.flagSet.clearFlags('hg')
-    "if l:flag !=# ''
-        "call l:path.flagSet.addFlag('hg', l:flag)
-    "endif
+    let l:path = a:event.subject
+    let l:flag = g:NERDTreeGetHgStatusPrefix(l:path)
+    call l:path.flagSet.clearFlags('hg')
+    if l:flag !=# ''
+        call l:path.flagSet.addFlag('hg', l:flag)
+    endif
 endfunction
 
-" FUNCTION: g:NERDTreeHgStatusRefresh() {{{2
+" FUNCTION: g:NERDTreeHgStatusRefresh() {{{1
 " refresh cached hg status
 function! g:NERDTreeHgStatusRefresh()
 "    call Dfunc("NERDTreeHgStatusRefresh()")
@@ -102,27 +102,29 @@ function! g:NERDTreeHgStatusRefresh()
 
         "" remove first two chars
         let l:pathStr = substitute(l:statusLine, '..', '', '')
-"        Decho l:pathStr
+        Decho l:pathStr
         let l:pathSplit = split(l:pathStr, ' -> ')
-"        Decho l:pathSplit
-        "if len(l:pathSplit) == 2
-            "call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
-            "let l:pathStr = l:pathSplit[1]
-        "else
-            "let l:pathStr = l:pathSplit[0]
-        "endif
-        "let l:pathStr = s:NERDTreeTrimDoubleQuotes(l:pathStr)
-        "if l:pathStr =~# '\.\./.*'
-            "continue
-        "endif
-        "let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
-        "let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
+        Decho l:pathSplit
+        if len(l:pathSplit) == 2
+            call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
+            let l:pathStr = l:pathSplit[1]
+        else
+            let l:pathStr = l:pathSplit[0]
+        endif
+        let l:pathStr = s:NERDTreeTrimDoubleQuotes(l:pathStr)
+        if l:pathStr =~# '\.\./.*'
+            continue
+        endif
+        let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
+        Decho l:statusKey
+        let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
-        "call s:NERDTreeCacheDirtyDir(l:pathStr)
+        call s:NERDTreeCacheDirtyDir(l:pathStr)
     endfor
 "    call Dret("NERDTreeHgStatusRefresh")
 endfunction
 
+" FUNCTION: g:NERDTreeCacheDirtyDir() {{{1
 function! s:NERDTreeCacheDirtyDir(pathStr)
     " cache dirty dir
     let l:dirtyPath = s:NERDTreeTrimDoubleQuotes(a:pathStr)
@@ -136,13 +138,14 @@ function! s:NERDTreeCacheDirtyDir(pathStr)
     endwhile
 endfunction
 
+" FUNCTION: g:NERDTreeTrimDoubleQuotes() {{{1
 function! s:NERDTreeTrimDoubleQuotes(pathStr)
     let l:toReturn = substitute(a:pathStr, '^"', '', '')
     let l:toReturn = substitute(l:toReturn, '"$', '', '')
     return l:toReturn
 endfunction
 
-" FUNCTION: g:NERDTreeGetHgStatusPrefix(path) {{{2
+" FUNCTION: g:NERDTreeGetHgStatusPrefix(path) {{{1
 " return the indicator of the path
 " Args: path
 let s:HgStatusCacheTimeExpiry = 2
@@ -168,7 +171,7 @@ function! g:NERDTreeGetHgStatusPrefix(path)
     return s:NERDTreeGetIndicator(l:statusKey)
 endfunction
 
-" FUNCTION: s:NERDTreeGetCWDHgStatus() {{{2
+" FUNCTION: s:NERDTreeGetCWDHgStatus() {{{1
 " return the indicator of cwd
 function! g:NERDTreeGetCWDHgStatus()
     if b:NOT_A_GIT_REPOSITORY
@@ -211,7 +214,7 @@ function! s:NERDTreeGetFileHgStatusKey(us, them)
     endif
 endfunction
 
-" FUNCTION: s:jumpToNextHunk(node) {{{2
+" FUNCTION: s:jumpToNextHunk(node) {{{1
 function! s:jumpToNextHunk(node)
     let l:position = search('\[[^{RO}].*\]', '')
     if l:position
@@ -219,7 +222,7 @@ function! s:jumpToNextHunk(node)
     endif
 endfunction
 
-" FUNCTION: s:jumpToPrevHunk(node) {{{2
+" FUNCTION: s:jumpToPrevHunk(node) {{{1
 function! s:jumpToPrevHunk(node)
     let l:position = search('\[[^{RO}].*\]', 'b')
     if l:position
@@ -227,7 +230,7 @@ function! s:jumpToPrevHunk(node)
     endif
 endfunction
 
-" Function: s:SID()   {{{2
+" Function: s:SID()   {{{1
 function s:SID()
     if !exists('s:sid')
         let s:sid = matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
@@ -235,7 +238,7 @@ function s:SID()
     return s:sid
 endfun
 
-" FUNCTION: s:NERDTreeHgStatusKeyMapping {{{2
+" FUNCTION: s:NERDTreeHgStatusKeyMapping {{{1
 function! s:NERDTreeHgStatusKeyMapping()
     let l:s = '<SNR>' . s:SID() . '_'
 
@@ -256,7 +259,7 @@ endfunction
 augroup nerdtreehgplugin
     autocmd CursorHold * silent! call s:CursorHoldUpdate()
 augroup END
-" FUNCTION: s:CursorHoldUpdate() {{{2
+" FUNCTION: s:CursorHoldUpdate() {{{1
 function! s:CursorHoldUpdate()
     if g:NERDTreeUpdateOnCursorHold != 1
         return
@@ -277,7 +280,7 @@ augroup nerdtreehgplugin
     autocmd BufWritePost * call s:FileUpdate(expand('%:p'))
 augroup END
 
-" FUNCTION: s:FileUpdate(fname) {{{2
+" FUNCTION: s:FileUpdate(fname) {{{1
 function! s:FileUpdate(fname)
     if g:NERDTreeUpdateOnWrite != 1
         return
@@ -304,6 +307,7 @@ function! s:FileUpdate(fname)
     exec l:winnr . 'wincmd w'
 endfunction
 
+" AUGROUP: s:AddHighlighting {{{1
 augroup AddHighlighting
     autocmd FileType nerdtree call s:AddHighlighting()
 augroup END
@@ -330,12 +334,14 @@ function! s:AddHighlighting()
     hi def link NERDTreeHgStatusDirClean DiffAdd
 endfunction
 
+" FUNCTION: g:SetupListeners() {{{1
 function! s:SetupListeners()
     call g:NERDTreePathNotifier.AddListener('init', 'NERDTreeHgStatusRefreshListener')
     call g:NERDTreePathNotifier.AddListener('refresh', 'NERDTreeHgStatusRefreshListener')
     call g:NERDTreePathNotifier.AddListener('refreshFlags', 'NERDTreeHgStatusRefreshListener')
 endfunction
 
+" FUNCTION: main() {{{1
 if g:NERDTreeShowHgStatus && executable('hg')
     call s:NERDTreeHgStatusKeyMapping()
     call s:SetupListeners()
