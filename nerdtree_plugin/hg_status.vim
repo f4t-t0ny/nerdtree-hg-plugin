@@ -57,8 +57,8 @@ function! NERDTreeHgStatusRefreshListener(event)
     "call g:NERDTreeHgStatusRefresh()
     if !exists('b:NOT_A_HG_REPOSITORY')
         call g:NERDTreeHgStatusRefresh()
-    else 
-"        Decho "Not a hg repo"
+    "else 
+        "Decho "Not a hg repo"
     endif
 
     let l:path = a:event.subject
@@ -72,8 +72,7 @@ endfunction
 " FUNCTION: g:NERDTreeHgStatusRefresh() {{{1
 " refresh cached hg status
 function! g:NERDTreeHgStatusRefresh()
-"    call Dfunc("NERDTreeHgStatusRefresh()")
-
+    "call Dfunc("NERDTreeHgStatusRefresh()")
     let b:NERDTreeCachedHgFileStatus = {}
     let b:NERDTreeCachedHgDirtyDir   = {}
     let b:NOT_A_HG_REPOSITORY        = 1
@@ -87,24 +86,24 @@ function! g:NERDTreeHgStatusRefresh()
     "endif
     let l:hgcmd = l:hgcmd . ' .'
     let l:statusesStr = system('cd ' . l:root . ' && ' . l:hgcmd)
-"    "Decho("statusesStr=" . statusesStr)
+    "Decho("statusesStr=" . statusesStr)
     let l:statusesSplit = split(l:statusesStr, '\n')
     if l:statusesSplit != [] && l:statusesSplit[0] =~# 'abort:.*'
         let l:statusesSplit = []
-"        call Dret("NERDTreeHgStatusRefresh")
+        "call Dret("NERDTreeHgStatusRefresh")
         return
     endif
     let b:NOT_A_HG_REPOSITORY = 0
 
     for l:statusLine in l:statusesSplit
-"        Decho l:statusLine 
+        "Decho l:statusLine 
         "" cache hg status of files
 
         "" remove first two chars
         let l:pathStr = substitute(l:statusLine, '..', '', '')
-"        Decho l:pathStr
+        "Decho l:pathStr
         let l:pathSplit = split(l:pathStr, ' -> ')
-"        Decho l:pathSplit
+        "Decho l:pathSplit
         if len(l:pathSplit) == 2
             call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
             let l:pathStr = l:pathSplit[1]
@@ -116,12 +115,12 @@ function! g:NERDTreeHgStatusRefresh()
             continue
         endif
         let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
-"        Decho l:statusKey
+        "Decho l:statusKey
         let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
         call s:NERDTreeCacheDirtyDir(l:pathStr)
     endfor
-"    call Dret("NERDTreeHgStatusRefresh")
+    "call Dret("NERDTreeHgStatusRefresh")
 endfunction
 
 " FUNCTION: g:NERDTreeCacheDirtyDir() {{{1
