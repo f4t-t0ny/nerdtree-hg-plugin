@@ -1,6 +1,10 @@
 nerdtree-git-plugin
 ===================
 
+Mostly, this plugin is a changed/adjusted version of 
+https://Xuyuanp/nerdtree-git-plugin for mercurial. Subrepos are automatically 
+also shown by default. 
+
 A plugin of NERDTree showing hg status flags. Works with the **LATEST** version of NERDTree.
 
 

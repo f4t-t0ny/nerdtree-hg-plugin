@@ -113,7 +113,9 @@ function! g:NERDTreeHgStatusRefresh()
         if l:pathStr =~# '\.\./.*'
             continue
         endif
-        let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
+        "Decho l:statusLine[0]
+        "Decho l:statusLine[1]
+        let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0])
         "Decho l:statusKey
         let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
@@ -194,18 +196,16 @@ function! s:NERDTreeGetIndicator(statusKey)
     return ''
 endfunction
 
-function! s:NERDTreeGetFileHgStatusKey(us, them)
-    if a:us ==# '?' && a:them ==# '?'
+function! s:NERDTreeGetFileHgStatusKey(us)
+    if a:us ==# '?'
         return 'Untracked'
-    elseif a:us ==# ' ' && a:them ==# 'M'
+    elseif a:us ==# 'M'
         return 'Modified'
-    elseif a:us =~# '[MAC]'
+    elseif a:us ==# 'A'
         return 'Staged'
-    elseif a:us ==# 'R'
-        return 'Renamed'
-    elseif a:us ==# 'U' || a:them ==# 'U' || a:us ==# 'A' && a:them ==# 'A' || a:us ==# 'D' && a:them ==# 'D'
+    elseif a:us ==# 'U'
         return 'Unmerged'
-    elseif a:them ==# 'D'
+    elseif a:us ==# 'R'
         return 'Deleted'
     else
         return 'Unknown'
