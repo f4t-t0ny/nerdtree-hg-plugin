@@ -102,9 +102,9 @@ function! g:NERDTreeHgStatusRefresh()
 
         "" remove first two chars
         let l:pathStr = substitute(l:statusLine, '..', '', '')
-        Decho l:pathStr
+"        Decho l:pathStr
         let l:pathSplit = split(l:pathStr, ' -> ')
-        Decho l:pathSplit
+"        Decho l:pathSplit
         if len(l:pathSplit) == 2
             call s:NERDTreeCacheDirtyDir(l:pathSplit[0])
             let l:pathStr = l:pathSplit[1]
@@ -116,7 +116,7 @@ function! g:NERDTreeHgStatusRefresh()
             continue
         endif
         let l:statusKey = s:NERDTreeGetFileHgStatusKey(l:statusLine[0], l:statusLine[1])
-        Decho l:statusKey
+"        Decho l:statusKey
         let b:NERDTreeCachedHgFileStatus[fnameescape(l:pathStr)] = l:statusKey
 
         call s:NERDTreeCacheDirtyDir(l:pathStr)
