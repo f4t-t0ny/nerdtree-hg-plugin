@@ -80,10 +80,9 @@ function! g:NERDTreeHgStatusRefresh()
     let l:root = b:NERDTreeRoot.path.str()
     let l:hgcmd = 'hg --config color.mode=false status'
 
-    "if !exists('g:NERDTreeHgStatusIgnoreSubrepositories')
-          "\ || 
-        "let l:hgcmd = l:hgcmd . ' -S'
-    "endif
+    if !exists('g:NERDTreeHgStatusIgnoreSubrepositories')
+        let l:hgcmd = l:hgcmd . ' -S'
+    endif
     let l:hgcmd = l:hgcmd . ' .'
     let l:statusesStr = system('cd ' . l:root . ' && ' . l:hgcmd)
     "Decho("statusesStr=" . statusesStr)
