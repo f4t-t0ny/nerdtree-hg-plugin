@@ -290,7 +290,11 @@ function! s:FileUpdate(fname)
     let l:winnr = winnr()
 
     call g:NERDTree.CursorToTreeWin()
-    let l:node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
+    try
+      let l:node = b:NERDTreeRoot.findNode(g:NERDTreePath.New(a:fname))
+    catch
+      return
+    endtry
     if l:node == {}
         return
     endif
