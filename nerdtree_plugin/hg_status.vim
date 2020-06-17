@@ -81,6 +81,7 @@ function! g:NERDTreeHgStatusRefresh()
     "call Dfunc("NERDTreeHgStatusRefresh()")
     let b:NERDTreeCachedHgFileStatus = {}
     let b:NERDTreeCachedHgDirtyDir   = {}
+    let s:HgStatusCacheDirty = 0
     let b:NOT_A_HG_REPOSITORY        = 1
 
     let l:root = b:NERDTreeRoot.path.str()
@@ -155,8 +156,10 @@ endfunction
 " return the indicator of the path
 " Args: path
 let s:HgStatusCacheTime = 0
+let s:HgStatusCacheDirty = 0
 function! g:NERDTreeGetHgStatusPrefix(path)
-    if g:NERDTreeHgStatusCacheTimeExpiry > 0 && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry 
+    if s:HgStatusCacheDirty || (g:NERDTreeHgStatusCacheTimeExpiry > 0 
+            \ && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry 
         let s:HgStatusCacheTime = localtime()
         call g:NERDTreeHgStatusRefresh()
     endif
@@ -271,7 +274,7 @@ function! s:CursorHoldUpdate()
     if !g:NERDTree.IsOpen()
         return
     endif
-
+    let s:HgStatusCacheDirty = 1
     let l:winnr = winnr()
     call g:NERDTree.CursorToTreeWin()
     call b:NERDTreeRoot.refreshFlags()
@@ -303,6 +306,7 @@ function! s:FileUpdate(fname)
     if l:node == {}
         return
     endif
+    let s:HgStatusCacheDirty = 1
     call l:node.refreshFlags()
     let l:node = l:node.parent
     while !empty(l:node)
