@@ -159,7 +159,7 @@ let s:HgStatusCacheTime = 0
 let s:HgStatusCacheDirty = 0
 function! g:NERDTreeGetHgStatusPrefix(path)
     if s:HgStatusCacheDirty || (g:NERDTreeHgStatusCacheTimeExpiry > 0 
-            \ && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry 
+            \ && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry)
         let s:HgStatusCacheTime = localtime()
         call g:NERDTreeHgStatusRefresh()
     endif
