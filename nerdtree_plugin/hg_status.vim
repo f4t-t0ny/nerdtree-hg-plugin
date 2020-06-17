@@ -38,6 +38,12 @@ if !exists('g:NERDTreeUpdateOnCursorHold')
     let g:NERDTreeUpdateOnCursorHold = 1
 endif
 
+" TTL for caching the HG status before refreshing it.
+" Set to 0 to avoid timed refreshes of the status cache.
+if !exists('g:NERDTreeHgStatusCacheTimeExpiry')
+    let g:NERDTreeHgStatusCacheTimeExpiry = 2
+endif
+
 if !exists('s:NERDTreeIndicatorMap')
     let s:NERDTreeIndicatorMap = {
                 \ 'Modified'  : '✹',
@@ -148,10 +154,9 @@ endfunction
 " FUNCTION: g:NERDTreeGetHgStatusPrefix(path) {{{1
 " return the indicator of the path
 " Args: path
-let s:HgStatusCacheTimeExpiry = 2
 let s:HgStatusCacheTime = 0
 function! g:NERDTreeGetHgStatusPrefix(path)
-    if localtime() - s:HgStatusCacheTime > s:HgStatusCacheTimeExpiry
+    if NERDTreeHgStatusCacheTimeExpiry > 0 && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry 
         let s:HgStatusCacheTime = localtime()
         call g:NERDTreeHgStatusRefresh()
     endif
