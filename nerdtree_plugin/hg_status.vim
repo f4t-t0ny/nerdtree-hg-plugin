@@ -38,6 +38,12 @@ if !exists('g:NERDTreeUpdateOnCursorHold')
     let g:NERDTreeUpdateOnCursorHold = 1
 endif
 
+" TTL for caching the HG status before refreshing it.
+" Set to 0 to avoid timed refreshes of the status cache.
+if !exists('g:NERDTreeHgStatusCacheTimeExpiry')
+    let g:NERDTreeHgStatusCacheTimeExpiry = 2
+endif
+
 if !exists('s:NERDTreeIndicatorMap')
     let s:NERDTreeIndicatorMap = {
                 \ 'Modified'  : '✹',
@@ -75,6 +81,7 @@ function! g:NERDTreeHgStatusRefresh()
     "call Dfunc("NERDTreeHgStatusRefresh()")
     let b:NERDTreeCachedHgFileStatus = {}
     let b:NERDTreeCachedHgDirtyDir   = {}
+    let s:HgStatusCacheDirty = 0
     let b:NOT_A_HG_REPOSITORY        = 1
 
     let l:root = b:NERDTreeRoot.path.str()
@@ -148,10 +155,11 @@ endfunction
 " FUNCTION: g:NERDTreeGetHgStatusPrefix(path) {{{1
 " return the indicator of the path
 " Args: path
-let s:HgStatusCacheTimeExpiry = 2
 let s:HgStatusCacheTime = 0
+let s:HgStatusCacheDirty = 0
 function! g:NERDTreeGetHgStatusPrefix(path)
-    if localtime() - s:HgStatusCacheTime > s:HgStatusCacheTimeExpiry
+    if s:HgStatusCacheDirty || (g:NERDTreeHgStatusCacheTimeExpiry > 0 
+            \ && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry)
         let s:HgStatusCacheTime = localtime()
         call g:NERDTreeHgStatusRefresh()
     endif
@@ -266,7 +274,7 @@ function! s:CursorHoldUpdate()
     if !g:NERDTree.IsOpen()
         return
     endif
-
+    let s:HgStatusCacheDirty = 1
     let l:winnr = winnr()
     call g:NERDTree.CursorToTreeWin()
     call b:NERDTreeRoot.refreshFlags()
@@ -298,6 +306,7 @@ function! s:FileUpdate(fname)
     if l:node == {}
         return
     endif
+    let s:HgStatusCacheDirty = 1
     call l:node.refreshFlags()
     let l:node = l:node.parent
     while !empty(l:node)
