@@ -156,7 +156,7 @@ endfunction
 " Args: path
 let s:HgStatusCacheTime = 0
 function! g:NERDTreeGetHgStatusPrefix(path)
-    if NERDTreeHgStatusCacheTimeExpiry > 0 && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry 
+    if g:NERDTreeHgStatusCacheTimeExpiry > 0 && localtime() > s:HgStatusCacheTime + g:NERDTreeHgStatusCacheTimeExpiry 
         let s:HgStatusCacheTime = localtime()
         call g:NERDTreeHgStatusRefresh()
     endif
