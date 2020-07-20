@@ -156,7 +156,7 @@ function! g:NERDTreeGetHgStatusPrefix(path)
         call g:NERDTreeHgStatusRefresh()
     endif
     let l:pathStr = a:path.str()
-    let l:cwd = b:NERDTreeRoot.path.str() . a:path.Slash()
+    let l:cwd = b:NERDTreeRoot.path.str() . nerdtree#slash()
     if nerdtree#runningWindows()
         let l:pathStr = a:path.WinToUnixPath(l:pathStr)
         let l:cwd = a:path.WinToUnixPath(l:cwd)
