@@ -184,7 +184,13 @@ endfunction
 
 function! s:NERDTreeGetIndicator(statusKey)
     if exists('g:NERDTreeIndicatorMapCustom')
+        " This is deprecated by nerdtree-git-plugin
         let l:indicator = get(g:NERDTreeIndicatorMapCustom, a:statusKey, '')
+        if l:indicator !=# ''
+            return l:indicator
+        endif
+    elseif exists('g:NERDTreeGitStatusIndicatorMapCustom')
+        let l:indicator = get(g:NERDTreeGitStatusIndicatorMapCustom, a:statusKey, '')
         if l:indicator !=# ''
             return l:indicator
         endif
