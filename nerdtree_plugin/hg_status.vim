@@ -156,7 +156,7 @@ function! g:NERDTreeGetHgStatusPrefix(path)
         call g:NERDTreeHgStatusRefresh()
     endif
     let l:pathStr = a:path.str()
-    let l:cwd = b:NERDTreeRoot.path.str() . a:path.Slash()
+    let l:cwd = b:NERDTreeRoot.path.str() . nerdtree#slash()
     if nerdtree#runningWindows()
         let l:pathStr = a:path.WinToUnixPath(l:pathStr)
         let l:cwd = a:path.WinToUnixPath(l:cwd)
@@ -184,7 +184,13 @@ endfunction
 
 function! s:NERDTreeGetIndicator(statusKey)
     if exists('g:NERDTreeIndicatorMapCustom')
+        " This is deprecated by nerdtree-git-plugin
         let l:indicator = get(g:NERDTreeIndicatorMapCustom, a:statusKey, '')
+        if l:indicator !=# ''
+            return l:indicator
+        endif
+    elseif exists('g:NERDTreeGitStatusIndicatorMapCustom')
+        let l:indicator = get(g:NERDTreeGitStatusIndicatorMapCustom, a:statusKey, '')
         if l:indicator !=# ''
             return l:indicator
         endif
